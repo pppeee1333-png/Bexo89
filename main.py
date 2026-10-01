@@ -49,9 +49,11 @@ logger = logging.getLogger(__name__)
 TOKEN = os.getenv("BOT_TOKEN")
 
 
-# Local Telegram Bot API
+# Local Telegram Bot API (optional)
+# يبقى مفعّلًا على البيئة القديمة، ويمكن تعطيله على Railway.
 LOCAL_API_URL = "http://127.0.0.1:8081/bot"
 LOCAL_FILE_API_URL = "http://127.0.0.1:8081/file/bot"
+USE_LOCAL_API = os.getenv("USE_LOCAL_API", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
 # =========================================================
@@ -184,20 +186,20 @@ def build_application() -> Application:
 
     # -----------------------------------------------------
     # Telegram Application
-    # Local Bot API Server
     # -----------------------------------------------------
+    # على Railway نستخدم Telegram Bot API الرسمي.
+    # على البيئة القديمة يمكن إبقاء Local Bot API كما كان.
+    builder = Application.builder().token(TOKEN)
 
-    app = (
-        Application.builder()
-        .token(TOKEN)
+    if USE_LOCAL_API:
+        builder = (
+            builder
+            .base_url(LOCAL_API_URL)
+            .base_file_url(LOCAL_FILE_API_URL)
+            .local_mode(True)
+        )
 
-        # Local Telegram Bot API
-        .base_url(LOCAL_API_URL)
-        .base_file_url(LOCAL_FILE_API_URL)
-        .local_mode(True)
-
-        .build()
-    )
+    app = builder.build()
 
     # -----------------------------------------------------
     # Automatic temporary-file cleanup
